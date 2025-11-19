@@ -1,0 +1,2261 @@
+<!-- Copyright © [17/11/2025]. [Sam Harper]. All rights reserved. -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<title>Darts Marathon</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b1020">
+<!-- iOS PWA support -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Darts Marathon">
+<link rel="apple-touch-icon" href="media/icons/icon-1024.png">
+<style>
+
+  :root{
+    --bg:#0b1020; --card:#111935; --muted:#9fb0d1; --accent:#3b82f6; --accent-2:#22c55e; --text:#eef2ff;
+    --row:#0f172a; --row2:#0b1227; --border:rgba(255,255,255,.08); --danger:#dc2626;
+    --chip:#0b1227; --btn-shadow:rgba(22,163,74,.35);
+    --btn-bg:#16a34a; --btn-bg2:#15803d;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    color-scheme: dark light;
+  }
+  html[data-theme="light"]{
+    --bg:#f3f6fb; --card:#ffffff; --muted:#42526b; --accent:#2563eb; --accent-2:#16a34a; --text:#0b1227;
+    --row:#ffffff; --row2:#f3f6fb; --border:rgba(0,0,0,.14); --danger:#dc2626;
+    --chip:#ffffff; --btn-shadow:rgba(22,163,74,.22);
+    --btn-bg:#16a34a; --btn-bg2:#138a35;
+  }
+  *{box-sizing:border-box}
+  html,body{
+  background:var(--bg);
+  color:var(--text);
+  margin:0;
+  width:100%;
+  -webkit-text-size-adjust:100%;
+  transition:background .2s,color .2s;
+  overflow-x:hidden;   /* leave this as-is */
+}
+
+/* Fix zoom-out while keeping full-width header */
+html {
+  overflow-x: visible;
+}
+
+body {
+  overflow-x: hidden;
+}
+  .container{max-width:1280px; width:100%; margin:0 auto; padding:16px;}
+  h1{margin:0; font-weight:800; font-size:1.5rem;}
+
+/* ========================= */
+/*        TOP BAR            */
+/* ========================= */
+
+/* TOP BAR — full-width */
+.topbar{
+  position:sticky;
+  top:0;
+  left:0;
+  right:0;
+  z-index:10000;
+  background:linear-gradient(180deg, rgba(12,18,40,.95), rgba(12,18,40,.92));
+  backdrop-filter:saturate(140%) blur(6px);
+  border-bottom:1px solid var(--border);
+}
+
+/* Light theme background for header */
+html[data-theme="light"] .topbar{
+  background:linear-gradient(
+    180deg,
+    rgba(255,255,255,.96),
+    rgba(245,247,252,.96)
+  );
+}
+
+/* Full-bleed on wider screens */
+@media (min-width: 769px){
+  .topbar{
+    width:100vw;
+    margin-left:calc(50% - 50vw);
+  }
+}
+
+/* Fix iOS notch */
+@supports (padding: max(0px)) {
+  .topbar {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Inner row */
+.toprow{
+  width:100%;
+  margin:0;              /* full width, no centring */
+  max-width:none;
+  padding:10px 12px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:nowrap;
+  min-width:0;
+}
+
+/* Left side - logo block */
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+  flex:0 0 auto;
+}
+
+/* Middle - tabs strip */
+.tabs{
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  flex:1 1 auto;        /* flexible middle space */
+  min-width:0;
+}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  padding:8px 14px;
+  border-radius:999px;
+  background:rgba(127,127,127,.12);
+  cursor:pointer;
+  user-select:none;
+  transition:all .2s;
+  white-space:nowrap;
+}
+.tab.active{
+  background:linear-gradient(180deg, var(--accent), #1d4ed8);
+  color:#fff;
+  box-shadow:0 6px 20px rgba(59,130,246,.35);
+}
+
+/* Right-side icon group */
+.top-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-left:auto;      /* this pushes them as far right as possible */
+  flex:0 0 auto;
+}
+
+/* Mobile header tweaks: keep everything on one row and push icons tight right */
+@media (max-width: 720px){
+  .toprow{
+    padding:8px 0 8px 8px;   /* LEFT 8px, RIGHT 0px */
+    gap:6px;
+  }
+
+  .top-logo{
+    height:34px;
+  }
+
+  .tab{
+    padding:6px 10px;
+    font-size:0.85rem;
+  }
+
+  .icon-btn,
+  .mode-toggle{
+    width:36px;
+    height:36px;
+  }
+}
+
+/* Icon buttons + mode pill (base, dark theme) */
+.icon-btn,
+.mode-toggle{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:40px;
+  height:40px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:linear-gradient(180deg, #334155, #1f2937);
+  color:#fff;
+  cursor:pointer;
+  user-select:none;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);
+  padding:0;
+  flex:0 0 auto;
+}
+
+/* Theme toggle dot (inside the mode pill) */
+.mode-dot{
+  width:16px;
+  height:16px;
+  border-radius:999px;
+  background:#fff; /* dot colour in dark mode */
+  box-shadow:0 0 4px rgba(0,0,0,.4);
+}
+
+html[data-theme="light"] .mode-dot{
+  background:#0b1227; /* dot colour in light mode */
+  box-shadow:0 0 4px rgba(0,0,0,.2);
+}
+
+html[data-theme="light"] .icon-btn,
+html[data-theme="light"] .mode-toggle{
+  background:linear-gradient(180deg, #e2e8f0, #cbd5e1);
+  color:#0b1227;
+}
+
+/* Mobile header tweaks */
+@media (max-width: 720px){
+  .toprow{
+    padding:8px 8px;
+    gap:6px;
+  }
+
+  .top-logo{
+    height:34px;
+  }
+
+  .tab{
+    padding:6px 10px;
+    font-size:0.85rem;
+  }
+
+  .icon-btn,
+  .mode-toggle{
+    width:36px;
+    height:36px;
+  }
+}
+
+  .panel{display:none;} .panel.active{display:block;}
+
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .card{
+    background:linear-gradient(180deg, rgba(127,127,127,.12), rgba(127,127,127,.05));
+    border:1px solid var(--border); border-radius:16px; padding:14px;
+    box-shadow:0 10px 30px rgba(0,0,0,.15);
+  }
+  html[data-theme="light"] .card{ box-shadow:0 6px 18px rgba(0,0,0,.06); }
+  .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+  label{display:block; margin:8px 0 6px; color:var(--muted); font-size:.95rem;}
+  input[type="text"],
+  input[type="number"],
+  input[type="file"],
+  input[type="password"],
+  select {
+    width:100%;
+    padding:10px 12px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:var(--chip);
+    color:var(--text);
+    font-size:.95rem;
+
+  
+}
+  button{
+    border:none; border-radius:999px; padding:10px 16px; font-weight:700; cursor:pointer; color:#fff;
+    background:linear-gradient(180deg, var(--btn-bg), var(--btn-bg2)); box-shadow:0 8px 24px var(--btn-shadow);
+    touch-action:manipulation;
+  }
+  button.secondary{background:linear-gradient(180deg, #334155, #1f2937);}
+  html[data-theme="light"] button.secondary{background:linear-gradient(180deg, #cbd5e1, #94a3b8); color:#0b1227;}
+  button.warn{background:linear-gradient(180deg, #ef4444, #b91c1c);}
+  .small{font-size:.85rem; color:var(--muted);} .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;}
+  .num{font-variant-numeric: tabular-nums; text-align:right;}
+  
+  button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+}
+/* Softer, cleaner placeholder style */
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+  opacity: 0.45; /* more subtle */
+}
+
+/* WebKit/iOS compatibility */
+input::-webkit-input-placeholder,
+textarea::-webkit-input-placeholder {
+  color: var(--muted);
+  opacity: 0.45;
+}
+
+
+
+  .progress{height:18px; background:var(--chip); border:1px solid var(--border); border-radius:999px; overflow:hidden; margin-top:8px;}
+  .bar{height:100%; width:0%; background:linear-gradient(90deg, var(--accent-2), #16a34a, #4ade80); transition:width .25s;}
+  .summary{margin-top:8px; display:flex; gap:14px; flex-wrap:wrap; font-size:.95rem;}
+
+  table{width:100%; border-collapse:separate; border-spacing:0 6px; margin-top:8px;}
+  thead th{font-size:.8rem; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.05em; padding:6px 8px;}
+  tbody tr{background:linear-gradient(180deg, var(--row), var(--row2)); border:1px solid var(--border);}
+  tbody td{padding:10px 8px; vertical-align:middle;}
+  .rank{width:42px; text-align:center; font-weight:800;}
+  .avatar{width:28px; height:28px; border-radius:999px; background:rgba(127,127,127,.18); background-size:cover; background-position:center;
+          display:inline-flex; align-items:center; justify-content:center; font-weight:800; margin-right:8px; cursor:pointer;}
+  .add-inp{width:100px; padding:6px 8px; border-radius:8px; border:1px solid var(--border); background:var(--chip); color:var(--text);}
+
+  .seg-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:10px;}
+  .seg{
+    position:relative; padding:14px 10px; text-align:center; background:var(--chip); border:1px solid var(--border);
+    border-radius:10px; cursor:pointer; user-select:none; font-weight:800; font-size:1.1rem; color:var(--text);
+  }
+  html[data-theme="light"] .seg{ background:#ffffff; border-color:rgba(0,0,0,.18); color:#0b1227; }
+  .seg:hover{filter:brightness(1.05);}
+  .bulls-row{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px;}
+
+  .toggles{display:flex; gap:8px; flex-wrap:wrap; margin:10px 0;}
+  .toggle{
+    background:var(--chip); border:1px solid var(--border); font-weight:800; color:var(--text) !important;
+  }
+  html[data-theme="light"] .toggle{ background:#ffffff; border-color:rgba(0,0,0,.18); color:#0b1227 !important; }
+  .toggle.active{background:linear-gradient(180deg, var(--accent), #1d4ed8); color:#fff !important; box-shadow:0 0 0 2px rgba(59,130,246,.35) inset;}
+
+  .visit{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px;}
+  .chip{
+    padding:6px 12px; border-radius:999px; background:var(--chip); border:1px solid var(--border);
+    font-size:1.1rem; font-weight:800; color:var(--text);
+  }
+  html[data-theme="light"] .chip{ background:#fff; color:#0b1227; }
+  .right{margin-left:auto;}
+  #vsum{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size:1.25rem; font-weight:900; letter-spacing:.02em;
+    padding:.2rem .6rem; border-radius:10px; background:linear-gradient(180deg, rgba(127,127,127,.12), rgba(127,127,127,.06));
+    border:1px solid var(--border);
+  }
+
+  .seg.danger::after{content:""; position:absolute; left:20%; right:20%; bottom:8px; height:3px; background:var(--danger);
+                     opacity:.7; border-radius:999px;}
+
+  .order-list{list-style:none; padding:0; margin:10px 0 0;}
+  .order-item{
+    display:flex; align-items:center; gap:10px; padding:8px; border-radius:12px;
+    background:linear-gradient(180deg, var(--row), var(--row2)); border:1px solid var(--border); margin-bottom:8px;
+  }
+  .order-item .name{flex:1; min-width:0; display:flex; align-items:center; gap:8px;}
+  .order-item .btns{display:flex; gap:8px; flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; max-width:55vw;}
+  .order-item .btns button{ padding:8px 12px; white-space:nowrap; }
+
+  /* Smaller buttons for photo controls */
+  .order-item .btns button.player-photo-btn,
+  .order-item .btns button.player-photo-delete-btn{
+    padding:6px 10px;
+    font-size:.85rem;
+  }
+  /* Smaller edit/delete icons next to player name */
+  .order-item .name button{
+    padding:6px 10px;
+    font-size:.85rem;
+  }
+
+  .tv-wrap{padding:8px;}
+  .tv-title{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .tv-title h2{margin:0;}
+  .tv-score-big{margin-top:8px; font-size:1.6rem; font-weight:800; text-align:right;}
+  .tv-progress{height:20px; border-radius:999px; background:var(--chip); border:1px solid var(--border); overflow:hidden; margin-top:8px;}
+  .tv-progress .bar{height:100%;}
+  .tv-grid{width:100%; border-collapse:separate; border-spacing:0 6px; margin-top:10px;}
+  .tv-grid thead th{
+    padding:6px 8px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.05em;
+  }
+
+  /* Line PLAYER header up above the name text (avatar + gap) */
+  .tv-grid thead th.tv-player-head{
+    text-align:left;
+    padding-left:54px; /* 8 cell padding + 36 avatar + 10 gap */
+  }
+
+  .tv-grid tbody tr{background:linear-gradient(180deg, var(--row), var(--row2)); border:1px solid var(--border);}
+  .tv-grid td{padding:10px 8px;}
+  .tv-rank{width:50px; text-align:center; font-weight:800; font-size:1.1rem;}
+  .tv-name{font-size:1.1rem; display:flex; align-items:center; gap:10px;}
+  .tv-avatar{width:36px; height:36px; border-radius:999px; background:rgba(127,127,127,.18); background-size:cover; background-position:center;
+             display:inline-flex; align-items:center; justify-content:center; font-weight:800;}
+  .tv-num{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:1.15rem; text-align:right;}
+
+  .mask{position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:5000;
+        background:rgba(0,0,0,.35); backdrop-filter: blur(6px) brightness(0.8);}
+  html[data-theme="light"] .mask{ background:rgba(0,0,0,.25); }
+  .mask.show{display:flex;}
+  .modal{width:min(520px, 92vw); background:linear-gradient(180deg, rgba(20,28,56,.98), rgba(12,18,40,.98));
+         border:1px solid var(--border); border-radius:16px; padding:16px;}
+  html[data-theme="light"] .modal{ background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(245,247,252,.98)); color:var(--text); }
+  .modal h3{margin:0 0 8px;}
+  .modal-row{display:flex; gap:8px; margin-top:8px;}
+  .pw-error{color:#f87171; min-height:1.1em; margin:6px 0 0; font-weight:700;}
+
+  @media (max-width:1100px){ .grid{grid-template-columns:1fr;} }
+  @media (max-width:600px){
+    .container{padding:12px;}
+    .tab{padding:7px 12px;}
+    .seg{padding:12px 8px; font-size:1rem;}
+    .seg-grid{gap:6px}
+    .bulls-row{gap:6px}
+    button{padding:9px 14px}
+    .brand h1{font-size:1rem;}
+  }
+
+  /* Board list layout */
+  #boardList {
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  #boardList .board-row {
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+#big180 {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1); /* <- was scale(0.5) */
+  font-size: 10rem;
+  font-weight: 900;
+  color: #ff2020;
+  /* Strong glow all the time */
+  text-shadow:
+    0 0 40px #ff4040,
+    0 0 80px #ff0000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease; /* <- drop transform from the transition */
+  z-index: 999999;
+}
+@keyframes wobble180 {
+  0%   { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  20%  { transform: translate(-50%, -50%) scale(1.05) rotate(-4deg); }
+  50%  { transform: translate(-50%, -50%) scale(1.1) rotate(4deg); }
+  80%  { transform: translate(-50%, -50%) scale(1.05) rotate(-3deg); }
+  100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+}
+
+
+@keyframes pulseGlow {
+  /* Same glow at start and end so no visual change */
+  0%,
+  100% {
+    text-shadow:
+      0 0 40px #ff4040,
+      0 0 80px #ff0000;
+  }
+}
+
+#big180mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.40); /* dim behind the 180 */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 99998;               /* just under #big180 which is 99999 */
+}
+
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="toprow">
+    <!-- Left: logo -->
+    <div class="brand">
+      <img src="media/images/logo.png" alt="" class="top-logo" aria-hidden="true">
+    </div>
+
+    <!-- Middle: tabs -->
+    <div class="tabs">
+      <div class="tab active" data-tab="scoring">Scoring</div>
+      <div class="tab" data-tab="leaderboard">Leaderboard</div>
+    </div>
+
+    <!-- Right: icon group -->
+    <div class="top-actions">
+      <!-- Settings Button -->
+      <button id="settingsBtn" class="icon-btn" title="Settings" aria-label="Settings">⚙️</button>
+
+      <!-- Speaker mute/unmute -->
+      <button id="voiceBtn" class="icon-btn" title="Toggle voice" aria-label="Toggle voice">🔊</button>
+
+      <!-- Refresh page -->
+      <button id="refreshBtn" class="icon-btn" title="Refresh page" aria-label="Refresh page">🔄</button>
+
+      <!-- Theme toggle -->
+      <div id="modeToggle" class="mode-toggle" title="Toggle theme">
+        <div class="mode-dot"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="container">
+
+  <!-- Setup -->
+  <div class="panel" id="panel-setup">
+    <div class="grid">
+      <div class="card">
+        <label>Event code (all devices share the same code)</label>
+        <div class="row">
+  <input id="eventId" placeholder="Enter an event code…" />
+  <button id="joinBtn" type="button">Join event</button>
+</div>
+        <p class="small" id="modeBadge">Cloud: not connected</p>
+
+        <label style="margin-top:8px;">Team target</label>
+        <input id="goal" type="number" value="100000" min="1" />
+        <div class="progress"><div class="bar" id="bar"></div></div>
+        <div class="summary" id="summary"></div>
+      </div>
+
+      <div class="card">
+        <label>Add player</label>
+        <input id="pname" placeholder="Player name" />
+        <label>Profile photo (optional)</label>
+        <input id="pphoto" type="file" accept="image/*" />
+        <div class="row" style="margin-top:8px;">
+          <button id="addPlayer" type="button">Add player</button>
+          <button id="resetAll" class="secondary" type="button">Reset all scores</button>
+        </div>
+
+        <label style="margin-top:12px;">Throw order (top throws first)</label>
+        <ul id="orderList" class="order-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scoring -->
+  <div class="panel active" id="panel-scoring">
+    <div class="grid">
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:flex-end;">
+          <div>
+            <h2 style="margin:0 0 6px;">Scoreboard</h2>
+            <p class="small" id="boardInfo">Board players: <span id="boardCount">All players</span></p>
+          </div>
+          <div class="row" style="gap:8px;">
+            <button id="manageBoard" class="secondary" type="button">Board players</button>
+            <button id="skipBtn" class="secondary" type="button">Skip Player</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div style="flex:1;">
+            <label>Thrower</label>
+            <select id="scorePlayer"><option value="">Select player…</option></select>
+          </div>
+        </div>
+
+        <div class="toggles">
+          <button class="toggle active" data-m="1" id="tS" type="button">Single</button>
+          <button class="toggle" data-m="2" id="tD" type="button">Double</button>
+          <button class="toggle" data-m="3" id="tT" type="button">Treble</button>
+        </div>
+
+        <div id="segGrid" class="seg-grid"></div>
+        <div class="bulls-row" id="bullRow"></div>
+
+        <div class="visit">
+          <span class="chip" id="d1">-</span>
+          <span class="chip" id="d2">-</span>
+          <span class="chip" id="d3">-</span>
+          <span class="right mono" id="vsum">Total: 0</span>
+        </div>
+
+        <div class="visit">
+          <button id="undoVisit" class="secondary" type="button">Undo</button>
+          <button id="submit" type="button">Submit visit</button>
+        </div>
+        <p id="nudge" class="small" style="min-height:1em; color:var(--muted);"></p>
+
+      </div>
+
+      <!-- Inline leaderboard -->
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:flex-end;">
+          <div>
+            <h2 style="margin:0;">Leaderboard</h2>
+            <p class="small" id="modeBadgeInline" style="margin:2px 0 0; opacity:0.85;">Cloud: not connected</p>
+          </div>
+          <span class="small" id="teamSummarySmall">Team: 0 pts • 0 darts</span>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th class="rank">#</th>
+              <th>Name</th>
+              <th class="num">Score</th>
+              <th class="num">Darts</th>
+              <th class="num">100+</th>
+              <th class="num">180</th>
+              <th class="num">Avg</th>
+              <th>Add</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ptable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaderboard TV -->
+  <div class="panel" id="panel-leaderboard">
+    <div class="tv-wrap">
+      <div class="tv-title">
+        <div>
+          <h2 style="margin:0;">Leaderboard</h2>
+         <p class="small" id="modeBadgeTV" style="margin:2px 0 0; opacity:0.85;">Cloud: not connected</p>
+        </div>
+        <label class="small">
+          <input type="checkbox" id="toggleExtra" style="vertical-align:middle; margin-right:6px;">
+          Show extra stats
+        </label>
+      </div>
+
+      <div id="tvScoreBig" class="tv-score-big"></div>
+      <div class="tv-progress"><div class="bar" id="tvBar"></div></div>
+      <div class="small" id="tvSummary" style="text-align:right; margin-top:6px;"></div>
+
+      <table class="tv-grid">
+        <thead><tr id="tvHeadRow"></tr></thead>
+        <tbody id="tvBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Start modal -->
+<div id="startMask" class="mask show" aria-hidden="false">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="startTitle">
+    <h3 id="startTitle">Start</h3>
+<p class="small">
+  Join an event to sync scores across devices.
+</p>
+<div class="modal-row">
+  <input id="startCode" placeholder="Enter an event code…" style="flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:var(--chip); color:var(--text);">
+  <button id="startJoin" type="button">Join event</button>
+</div>
+  </div>
+</div>
+
+<!-- Password modal -->
+<div id="pwMask" class="mask" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pwTitle">
+    <h3 id="pwTitle">Enter settings password</h3>
+    <div class="modal-row">
+      <input id="pwInput" type="password" autocomplete="current-password" placeholder="Password"
+             style="flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:var(--chip); color:var(--text);">
+      <button id="pwSubmit" type="button">Unlock</button>
+      <button id="pwCancel" class="secondary" type="button">Cancel</button>
+    </div>
+    <div id="pwError" class="pw-error"></div>
+  </div>
+</div>
+
+<!-- Board players modal -->
+<div id="boardMask" class="mask" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="boardTitle">
+    <h3 id="boardTitle">Select board players (this device)</h3>
+    <div id="boardList" style="display:flex; flex-direction:column; gap:8px; margin-top:8px; max-height:60vh; overflow-y:auto;"></div>
+    <div class="modal-row" style="margin-top:12px;">
+  <button id="boardCancel" class="secondary" type="button">Cancel</button>
+  <button id="boardClear" class="warn" type="button">Clear</button>
+  <button id="boardSave" type="button">Save players</button>
+</div>
+  </div>
+</div>
+
+<!-- Firebase (compat) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+  // Firebase config for your project
+  const firebaseConfig = {
+    apiKey: "AIzaSyC-AJyw3ApZJMHgJzoAAd0zsZiPOYykbVM",
+    authDomain: "darts-marathon.firebaseapp.com",
+    projectId: "darts-marathon",
+    storageBucket: "darts-marathon.firebasestorage.app",
+    messagingSenderId: "408122809544",
+    appId: "1:408122809544:web:76035b44ea2947e6f219fd"
+  };
+
+  // Initialise Firebase using COMPAT mode
+  if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+</script>
+
+
+<script>
+/* ===== Core state ===== */
+const $ = s=>document.querySelector(s);
+const uid = ()=> (Date.now().toString(36)+Math.random().toString(36).slice(2,8));
+const fmt = n => Number(n||0).toLocaleString();
+
+const tabs=document.querySelectorAll('.tab');
+const panels={ setup:$('#panel-setup'), scoring:$('#panel-scoring'), leaderboard:$('#panel-leaderboard') };
+
+let goal=100000, showExtra=false;
+let players={}; let throwOrder=[], currentIndex=0;
+let actionStack=[];
+let boardPlayers=[];                // per-device selection
+let currentThrowerId=null;          // active thrower on this device
+
+// Sync state
+let currentEventId = null;
+let eventRef = null;
+let unsubscribeEvent = null;
+let isApplyingRemote = false;
+let cloudConnected = false; // true only once Firestore sends us data
+
+/* Theme (defaults to dark) */
+const THEME_KEY = 'dm_theme';
+let stored = localStorage.getItem(THEME_KEY);
+if (!stored){
+  localStorage.setItem(THEME_KEY, 'dark');
+  stored = 'dark';
+}
+
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  // no label to update any more
+}
+
+applyTheme(stored);
+
+$('#modeToggle').onclick = () => {
+  const t = (document.documentElement.getAttribute('data-theme') === 'dark')
+    ? 'light'
+    : 'dark';
+  localStorage.setItem(THEME_KEY, t);
+  applyTheme(t);
+};
+
+// Settings cog opens setup (with password modal)
+$('#settingsBtn').onclick = () => {
+  openPasswordModal(null); // same behaviour as clicking Setup tab
+};
+
+/* Voice (per device) */
+
+const VOX_KEY='dm_voice_on';
+let voiceOn = JSON.parse(localStorage.getItem(VOX_KEY) ?? 'true');
+function updateVoiceBtn(){
+  const b = $('#voiceBtn');
+  b.textContent = voiceOn ? '🔊' : '🔇';
+  b.setAttribute('aria-pressed', String(voiceOn));
+  b.title = voiceOn ? 'Mute voice' : 'Unmute voice';
+}
+function speakTotal(total){
+  playScoreCall(total);
+}
+
+$('#voiceBtn').onclick = ()=>{
+  voiceOn = !voiceOn;
+  localStorage.setItem(VOX_KEY, JSON.stringify(voiceOn));
+  updateVoiceBtn();
+};
+updateVoiceBtn();
+ /* ===== Sound pack (MP3) ===== */
+/* Folder structure:
+   media/sounds/gameon.mp3
+   media/sounds/0.mp3 ... /sounds/180.mp3
+*/
+
+const SOUND_PATH = 'media/sounds/';
+const soundCache = {};
+let soundsPreloaded = false;
+
+// Preload all score sounds 0–180 + gameon
+function preloadSounds(){
+  if (soundsPreloaded) return;
+  soundsPreloaded = true;
+
+  // Preload "game on"
+  preloadSoundKey('gameon', SOUND_PATH + 'gameon.mp3');
+
+  // Preload numeric calls 0–180
+  for (let i = 0; i <= 180; i++){
+    preloadSoundKey(String(i), SOUND_PATH + i + '.mp3');
+  }
+}
+
+// Internal helper to preload one file
+function preloadSoundKey(key, url){
+  try{
+    const audio = new Audio();
+    audio.src = url;
+    audio.preload = 'auto';
+    audio.load(); // triggers buffering
+
+    soundCache[key] = audio;
+  }catch(e){
+    console.warn('Could not preload sound', key, url, e);
+  }
+}
+
+// Play by key ("gameon") or number (0–180)
+// Falls back to browser TTS automatically if missing
+function playSoundByKey(key, onError){
+  if (!voiceOn) return false;
+
+  const base = soundCache[key];
+  if (!base){
+    // No cached sound at all - let caller know so it can fallback
+    if (typeof onError === 'function') onError();
+    return false;
+  }
+
+  const a = base.cloneNode(true);
+
+  // If the audio element itself errors or stalls, trigger fallback
+  if (typeof onError === 'function'){
+    a.onerror = () => onError();
+    a.onstalled = () => onError();
+  }
+
+  try{
+    const p = a.play();
+    if (p && typeof p.then === 'function' && typeof onError === 'function'){
+      p.catch(() => onError());
+    }
+  }catch(e){
+    if (typeof onError === 'function') onError();
+    return false;
+  }
+
+  return true;
+}
+function showBig180() {
+  const el   = document.getElementById('big180');
+  const mask = document.getElementById('big180mask');
+
+  if (!el || !mask) return;
+
+  // Fade in the dimmed background
+  mask.style.opacity = '1';
+
+  // Reset animation so it can replay every time
+  el.style.animation = 'none';
+  void el.offsetWidth; // force reflow
+
+  // Show and animate the 180
+  el.style.opacity = '1';
+  el.style.transform = 'translate(-50%, -50%) scale(1)';
+  el.style.animation = 'wobble180 2.5s ease-out, pulseGlow 2.6s ease-out';
+
+  // Hide after 4.5s
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transform = 'translate(-50%, -50%) scale(0.5)';
+    mask.style.opacity = '0';
+  }, 4500);
+}
+
+function playScoreCall(value){
+  if (!voiceOn) return;
+
+  // Numeric score 0-180
+  if (typeof value === 'number'){
+    const clamped = Math.max(0, Math.min(180, value|0));
+
+    // Try MP3, fallback to system TTS if anything goes wrong
+    playSoundByKey(String(clamped), () => {
+      speakTotalFallback(clamped);
+    });
+
+    return;
+  }
+
+  // Named call like "gameon"
+  if (typeof value === 'string'){
+    // For gameon etc we do not bother with TTS fallback
+    playSoundByKey(value.toLowerCase());
+  }
+}
+
+
+
+// Browser TTS fallback (only used if MP3 missing)
+function speakTotalFallback(total){
+  try{
+    window.speechSynthesis.cancel();
+    const msg = new SpeechSynthesisUtterance(String(total));
+    const voices = speechSynthesis.getVoices();
+    msg.voice = voices.find(v => /en-GB/i.test(v.lang)) || voices[0];
+    speechSynthesis.speak(msg);
+  }catch(e){}
+}
+   
+
+/* Storage - per-event for scores, shared for board selection */
+const LS_PREFIX='dm_countup_state_clean_v17_'; // new prefix so old blob is ignored
+const LSB='dm_board_players_v1';
+
+function lsKeyForCurrent(){
+  // Scores are stored per event; no event = no scores persisted
+  return LS_PREFIX + (currentEventId || 'no_event');
+}
+
+
+// Simple helper for timestamps
+function nowTs(){
+  return Date.now();
+}
+
+function getStateForSync(){
+  return {
+    goal,
+    players,
+    throwOrder,
+    currentIndex,   // optional, but harmless
+    showExtra,
+    updated: nowTs()
+  };
+}
+
+
+
+// Make sure a player always has a numeric lastUpdated
+function ensurePlayerStamp(p){
+  if(!p) return;
+  if(typeof p.lastUpdated !== 'number'){
+    p.lastUpdated = 0;
+  }
+}
+
+function touchPlayer(id){
+  if(!players[id]) return;
+  ensurePlayerStamp(players[id]);
+  players[id].lastUpdated = nowTs();
+}
+
+
+/// Visual indicator for cloud status only
+function updateModeBadge(customText, isCloud, isConnected, isError){
+  const elMain   = $('#modeBadge');        // setup card
+  const elInline = $('#modeBadgeInline');  // inline leaderboard card
+  const elTV     = $('#modeBadgeTV');      // TV leaderboard header
+
+  let text;
+
+  // 1) Custom override text if provided
+  if (customText){
+    text = customText;
+  } else {
+    const code = currentEventId || 'none';
+
+    if (!isCloud || !currentEventId){
+      text = 'Cloud: not connected';
+    } else if (isError){
+      text = `Cloud: event "${code}" (error - not syncing)`;
+    } else if (!isConnected){
+      text = `Cloud: event "${code}" (connecting...)`;
+    } else {
+      text = `Cloud: event "${code}" (synced)`;
+    }
+  }
+
+  // Apply text to all badges that exist
+  [elMain, elInline, elTV].forEach(el => {
+    if (el) el.textContent = text;
+  });
+
+  // Colour: green when synced, amber when connecting, red on error / not connected
+  const colour = (!isCloud || !currentEventId || isError)
+    ? '#f97373'          // red-ish when not connected or error
+    : (isConnected ? '#4ade80' : '#facc15'); // green when synced, amber when connecting
+
+  [elMain, elInline, elTV].forEach(el => {
+    if (el) el.style.color = colour;
+  });
+}
+
+
+// New: local-only saver
+function saveLocalOnly(){
+  if (!currentEventId){
+    // No event joined - do not persist scores to avoid leaking between events
+    return;
+  }
+  localStorage.setItem(lsKeyForCurrent(), JSON.stringify({
+    goal,
+    players,
+    throwOrder,
+    currentIndex,
+    showExtra,
+    actionStack,
+    currentThrowerId
+  }));
+}
+
+
+// New: local + optional cloud write
+function saveLocal(skipCloud){
+  // Always keep this device up to date
+  saveLocalOnly();
+
+  // Skip cloud write when explicitly requested (e.g. per-visit scoring)
+  if (skipCloud) return;
+
+  // Only push to Firestore when we have an eventRef and we are not applying a remote snapshot
+  if (eventRef && !isApplyingRemote){
+    try {
+      eventRef.set(getStateForSync(), { merge: true });
+    } catch (e) {
+      console.warn('Cloud sync failed', e);
+      // If cloud write fails, keep the red error state until it recovers
+      updateModeBadge(null, true, false, true);
+    }
+  }
+}
+// Helper for atomic Firestore updates for scores
+function pushAtomic(updates){
+  if (!eventRef) return;
+
+  updates.updated = nowTs();
+
+  try{
+    eventRef.update(updates)
+      .then(() => console.log('Atomic update OK', updates))
+      .catch(err => {
+        console.error('Atomic update FAILED', err);
+        nudge('Cloud error - scores not synced');
+      });
+  }catch(e){
+    console.error('Atomic update threw', e);
+    nudge('Cloud error - scores not synced');
+  }
+}
+
+function loadLocalForCurrentEvent(){
+  if (!currentEventId) return;
+  try{
+    const d = JSON.parse(localStorage.getItem(lsKeyForCurrent()) || '{}');
+    goal             = d.goal || 100000;
+    players          = d.players || {};
+    Object.values(players).forEach(p=>{
+      p.darts       = p.darts       || 0;
+      p.tonPlus     = p.tonPlus     || 0;
+      p.oneEighties = p.oneEighties || 0;
+      ensurePlayerStamp(p);
+    });
+    throwOrder       = d.throwOrder || Object.keys(players);
+    currentIndex     = d.currentIndex || 0;
+    showExtra        = !!d.showExtra;
+    actionStack      = d.actionStack || [];
+    currentThrowerId = d.currentThrowerId || null;
+  }catch(_){}
+}
+
+function loadBoardLocal(){
+  try{
+    boardPlayers = JSON.parse(localStorage.getItem(LSB)||'[]');
+  }catch(_){
+    boardPlayers=[];
+  }
+}
+
+/* Tabs + password */
+function switchTab(name){
+  tabs.forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+  Object.entries(panels).forEach(([k,p])=> p.classList.toggle('active', k===name));
+}
+const startMask=$('#startMask');
+
+const pwMask=$('#pwMask');
+const pwInput=$('#pwInput'), pwSubmit=$('#pwSubmit'), pwCancel=$('#pwCancel'), pwError=$('#pwError');
+let pwNextAction=null;
+
+// Enable Enter / ✓ to submit password
+pwInput.addEventListener('keydown', (e)=>{
+  if (e.key === 'Enter'){
+    e.preventDefault();
+    pwSubmit.click();
+  }
+});
+
+function openPasswordModal(nextAction){
+  pwNextAction=nextAction||null;
+  pwInput.value='';
+  pwError.textContent='';
+  pwMask.classList.add('show');
+  pwMask.setAttribute('aria-hidden','false');
+  setTimeout(()=>pwInput.focus(),10);
+}
+
+function closePasswordModal(){
+  pwMask.classList.remove('show');
+  pwMask.setAttribute('aria-hidden','true');
+}
+pwSubmit.onclick=()=>{
+  if(pwInput.value!=='fatboys1'){
+    pwError.textContent='Error: incorrect password';
+    pwInput.select();
+    return;
+  }
+  const action=pwNextAction; pwNextAction=null;
+  closePasswordModal();
+  if(action) action(); else switchTab('setup');
+};
+pwCancel.onclick=()=>{ pwNextAction=null; closePasswordModal(); };
+
+tabs.forEach(t=>t.addEventListener('click', ()=>{
+  const target=t.dataset.tab;
+  if(target==='setup'){
+    openPasswordModal(null);
+    return;
+  }
+  switchTab(target);
+}));
+
+/* DOM refs */
+const goalEl=$('#goal'), bar=$('#bar'), summary=$('#summary');
+const pname=$('#pname'), pphoto=$('#pphoto'), addPlayerBtn=$('#addPlayer'), resetAllBtn=$('#resetAll'); const orderList=$('#orderList');
+const scorePlayerSel=$('#scorePlayer'), skipBtn=$('#skipBtn');
+const segGrid=$('#segGrid'), bullRow=$('#bullRow'), tS=$('#tS'), tD=$('#tD'), tT=$('#tT');
+const dEls=[$('#d1'),$('#d2'),$('#d3')], vsum=$('#vsum'); const undoVisitBtn=$('#undoVisit'), submitBtn=$('#submit'), nudgeEl=$('#nudge');
+const ptable=$('#ptable'), teamSummarySmall=$('#teamSummarySmall');
+const tvBar=$('#tvBar'), tvScoreBig=$('#tvScoreBig'), tvSummary=$('#tvSummary'), tvBody=$('#tvBody'), tvHeadRow=$('#tvHeadRow'), toggleExtra=$('#toggleExtra');
+const boardMask=$('#boardMask'), boardList=$('#boardList'), boardSave=$('#boardSave'), boardCancel=$('#boardCancel'), boardClear=$('#boardClear'), boardCount=$('#boardCount');
+const startCodeInput = $('#startCode');
+const eventIdInput = $('#eventId');
+const startJoinBtn = $('#startJoin');
+const joinBtn = $('#joinBtn');
+const refreshBtn = $('#refreshBtn');
+
+// Refresh page with confirmation
+if (refreshBtn){
+  refreshBtn.onclick = ()=>{
+    const msg = 'Refresh this page and reload the event?\n\nScores are stored in the cloud per event, but any unsynced local changes may be lost.';
+    if(confirm(msg)){
+      location.reload();
+    }
+  };
+}
+
+
+// Disable join buttons until a code is typed
+startJoinBtn.disabled = true;
+joinBtn.disabled = true;
+
+// Enable/disable Start modal Join based on input
+startCodeInput.addEventListener('input', ()=>{
+  const hasCode = !!startCodeInput.value.trim();
+  startJoinBtn.disabled = !hasCode;
+});
+
+// Allow Enter / tick to submit start modal code
+startCodeInput.addEventListener('keydown', (e)=>{
+  if (e.key === 'Enter'){
+    e.preventDefault();
+    if (!startJoinBtn.disabled){
+      startJoinBtn.click();
+    }
+  }
+});
+
+
+// Enable/disable Setup tab Join based on input
+eventIdInput.addEventListener('input', ()=>{
+  const hasCode = !!eventIdInput.value.trim();
+  joinBtn.disabled = !hasCode;
+});
+// Allow Enter / tick to submit setup tab code
+eventIdInput.addEventListener('keydown', (e)=>{
+  if (e.key === 'Enter'){
+    e.preventDefault();
+    if (!joinBtn.disabled){
+      joinBtn.click();
+    }
+  }
+});
+
+
+/* Helpers */
+const teamTotal = ()=> Object.values(players).reduce((s,p)=>s+(p.score||0),0);
+const teamDarts  = ()=> Object.values(players).reduce((s,p)=>s+(p.darts||0),0);
+const threeDA = p => (p.darts>0 ? ((p.score/p.darts)*3) : 0);
+function nudge(msg, type){
+  // msg: string or empty
+  // type: 'error' for red, anything else/undefined = normal muted text
+
+  nudgeEl.textContent = msg || '';
+
+  if (!msg){
+    // Reset to default colour when clearing
+    nudgeEl.style.color = 'var(--muted)';
+    return;
+  }
+
+  if (type === 'error'){
+    nudgeEl.style.color = '#f97373'; // red
+  } else {
+    nudgeEl.style.color = 'var(--muted)'; // default muted colour
+  }
+
+  setTimeout(()=>{
+    if (nudgeEl.textContent === msg){
+      nudgeEl.textContent = '';
+      nudgeEl.style.color = 'var(--muted)';
+    }
+  }, 5000);
+}
+
+
+
+/* Subtle tap sound (Option B style) */
+let tapCtx = null;
+function playTap(){
+  try{
+    if(!tapCtx){
+      tapCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    const ctx = tapCtx;
+
+    const bufferSize = 2048;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    // Fill with very short noise burst
+    for (let i = 0; i < bufferSize; i++){
+      data[i] = (Math.random() * 2 - 1) * 0.3;
+    }
+
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const gain = ctx.createGain();
+    const now = ctx.currentTime;
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+
+    noise.connect(gain);
+    gain.connect(ctx.destination);
+
+    noise.start(now);
+    noise.stop(now + 0.05);
+  }catch(e){
+    // ignore
+  }
+}
+
+
+
+/* Image compression */
+function fileToCompressedDataURL(file, maxSize=256){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const canvas = document.createElement('canvas');
+        let w = img.width;
+        let h = img.height;
+        const max = maxSize;
+        if(w>h){
+          if(w>max){ h = Math.round(h*max/w); w=max; }
+        }else{
+          if(h>max){ w = Math.round(w*max/h); h=max; }
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img,0,0,w,h);
+        try{
+          const dataUrl = canvas.toDataURL('image/jpeg',0.7);
+          resolve(dataUrl);
+        }catch(err){
+          reject(err);
+        }
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* Cloud sync (Firestore) */
+function detachCloudListener(){
+  if(unsubscribeEvent){
+    unsubscribeEvent();
+    unsubscribeEvent = null;
+  }
+  eventRef = null;
+}
+
+function attachCloudListener(){
+  // If Firebase SDK or app is not initialised, we show a permanent error state
+  if (typeof firebase === 'undefined' || !firebase.apps || !firebase.apps.length){
+    nudge('Cloud sync not available (Firebase not initialised).');
+    detachCloudListener();
+    cloudConnected = false;
+    updateModeBadge(null, false, false, true);  // red: not connected / error
+    return;
+  }
+
+  try{
+    const db = firebase.firestore();
+    eventRef = db.collection('events').doc(currentEventId);
+
+    cloudConnected = false;
+    // We know we are trying to use cloud, but not connected yet
+    updateModeBadge(null, true, false, false);   // amber "connecting..."
+
+    unsubscribeEvent = eventRef.onSnapshot(doc => {
+      if (!doc.exists){
+        // First writer for this event - push our local state up
+        try{
+          eventRef.set(getStateForSync());
+          cloudConnected = true;
+          updateModeBadge(null, true, true, false); // green "synced"
+        }catch(e){
+          console.warn('Initial cloud set failed', e);
+          cloudConnected = false;
+          updateModeBadge(null, true, false, true); // red error
+        }
+        return;
+      }
+
+      const data = doc.data() || {};
+      isApplyingRemote = true;
+
+            // Non player fields
+      goal        = data.goal ?? goal;
+      showExtra   = !!data.showExtra;
+      throwOrder  = data.throwOrder || throwOrder || [];
+      currentIndex = data.currentIndex || 0; // if you ever use it
+      // actionStack and currentThrowerId stay per-device only now
+
+
+
+           // Take players straight from Firestore – Firestore is the source of truth
+      const remotePlayers = data.players || {};
+
+      Object.values(remotePlayers).forEach(p => {
+        p.score       = p.score       || 0;
+        p.darts       = p.darts       || 0;
+        p.tonPlus     = p.tonPlus     || 0;
+        p.oneEighties = p.oneEighties || 0;
+        // lastUpdated not used for conflict any more
+      });
+
+      players = remotePlayers;
+
+
+         // ...after you’ve merged remote data into `players`, `goal`, etc...
+
+    isApplyingRemote = false;
+
+    // Persist locally but DO NOT trigger another cloud write
+    saveLocalOnly();
+    renderPlayers();
+    updateBars();
+    syncToggle();
+    renderBoardCount();
+
+    cloudConnected = true;
+    updateModeBadge(null, true, true, false); // now safely "synced"
+
+    }, err => {
+      console.warn('Cloud listener error', err);
+      nudge('Cloud error - scores are no longer syncing.');
+      cloudConnected = false;
+      // Stay on this eventId, but mark as error in red
+      updateModeBadge(null, true, false, true);
+    });
+  }catch(e){
+    console.error(e);
+    nudge('Could not connect to cloud.');
+    detachCloudListener();
+    cloudConnected = false;
+    updateModeBadge(null, true, false, true); // red error
+  }
+}
+
+function joinCloudWithCode(rawCode, closeStartMask){
+  const code = (rawCode || '').trim().toLowerCase();
+  if(!code){
+    nudge('Enter an event code');
+    return;
+  }
+
+  // Switch to a new event: clear in-memory scoreboard so nothing leaks across
+  detachCloudListener();
+  currentEventId   = code;
+  goal             = 100000;
+  players          = {};
+  throwOrder       = [];
+  currentIndex     = 0;
+  actionStack      = [];
+  currentThrowerId = null;
+  visit            = [];
+
+  // NEW: reset board selection for this device
+  boardPlayers = [];
+  saveBoard();
+
+  renderVisit();
+  renderPlayers();
+  updateBars();
+  renderBoardCount();
+  syncToggle();
+
+  // Load any local cache tied specifically to this event (if we've used it before)
+  loadLocalForCurrentEvent();
+
+  if(closeStartMask){
+    startMask.classList.remove('show');
+    startMask.setAttribute('aria-hidden','true');
+  }
+  if(eventIdInput) eventIdInput.value = code;
+
+  attachCloudListener();
+  nudge(`Joined cloud event "${code}"`);
+}
+
+
+/* Start modal buttons */
+startJoinBtn.onclick = ()=>{
+  if(!startCodeInput.value.trim()){
+    nudge('Enter an event code', 'error');
+    return;
+  }
+  joinCloudWithCode(startCodeInput.value, true);
+};
+
+
+/* Setup tab join/quick-start */
+joinBtn.onclick = ()=>{
+  if(!eventIdInput.value.trim()){
+    nudge('Enter an event code', 'error');
+    return;
+  }
+  joinCloudWithCode(eventIdInput.value, false);
+};
+
+
+/* Board players modal */
+$('#manageBoard').onclick=()=>{ buildBoardList(); openBoardModal(); };
+function openBoardModal(){
+  boardMask.classList.add('show');
+  boardMask.setAttribute('aria-hidden','false');
+}
+function closeBoardModal(){
+  boardMask.classList.remove('show');
+  boardMask.setAttribute('aria-hidden','true');
+}
+boardCancel.onclick=closeBoardModal;
+boardClear.onclick=()=>{
+  boardPlayers=[];
+  saveBoard();
+  buildBoardList();
+  refreshThrowerSelect();
+};
+boardSave.onclick=()=>{
+  const checks=[...boardList.querySelectorAll('input[type=checkbox]')];
+  boardPlayers = checks.filter(c=>c.checked).map(c=>c.value);
+  saveBoard();
+  closeBoardModal();
+  refreshThrowerSelect();
+
+  if (boardPlayers.length > 0){
+    playScoreCall('gameon');
+  }
+};
+
+function saveBoard(){
+  localStorage.setItem(LSB, JSON.stringify(boardPlayers||[]));
+  renderBoardCount();
+}
+function buildBoardList(){
+  boardList.innerHTML = '';
+
+  Object.keys(players).forEach(id => {
+    const row = document.createElement('div');
+    row.className = 'board-row';
+
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.value = id;
+    cb.checked = boardPlayers.length > 0 && boardPlayers.includes(id);
+
+    const avatar = document.createElement('span');
+    avatar.style.width = '24px';
+    avatar.style.height = '24px';
+    avatar.style.borderRadius = '999px';
+    avatar.style.display = 'inline-flex';
+    avatar.style.alignItems = 'center';
+    avatar.style.justifyContent = 'center';
+    avatar.style.fontSize = '.75rem';
+    avatar.style.fontWeight = '700';
+    avatar.style.background = 'rgba(127,127,127,.25)';
+    avatar.style.backgroundSize = 'cover';
+    avatar.style.backgroundPosition = 'center';
+    avatar.style.flexShrink = '0';
+    avatar.style.color = 'var(--text)';
+
+    const p = players[id];
+    if(p && p.photo){
+      avatar.style.backgroundImage = `url(${p.photo})`;
+      avatar.textContent = '';
+    }else{
+      avatar.textContent = (p && p.name ? p.name[0].toUpperCase() : '?');
+    }
+
+    const span = document.createElement('span');
+    span.textContent = players[id].name;
+
+    row.onclick = (e) => {
+      if (e.target !== cb) cb.checked = !cb.checked;
+    };
+
+    row.append(cb, avatar, span);
+    boardList.appendChild(row);
+  });
+}
+
+function renderBoardCount(){
+  // If no event or no players, treat as "All players"
+  if (!currentEventId || !Object.keys(players).length){
+    boardCount.textContent = 'All players';
+    return;
+  }
+
+  boardCount.textContent = (boardPlayers && boardPlayers.length > 0)
+    ? `${boardPlayers.length} selected`
+    : 'All players';
+}
+
+
+/* Throw pool helpers */
+function rosterIds(){
+  const base = throwOrder.filter(id=>players[id]);
+  return (boardPlayers && boardPlayers.length>0) ? base.filter(id=>boardPlayers.includes(id)) : base;
+}
+
+/* Rendering */
+function updateBars(){
+  const total = teamTotal(), darts = teamDarts();
+  const pct = Math.min(100, goal > 0 ? (total / goal) * 100 : 0);
+
+  bar.style.width = pct + '%';
+  summary.innerHTML = `<span><b>Team total:</b> ${fmt(total)} pts</span><span><b>Target:</b> ${fmt(goal)} pts</span><span><b>Darts:</b> ${fmt(darts)}</span><span><b>Progress:</b> ${pct.toFixed(1)}%</span>`;
+  teamSummarySmall.textContent = `Team: ${fmt(total)} pts • ${fmt(darts)} darts`;
+
+  tvBar.style.width = pct + '%';
+  if (tvScoreBig) tvScoreBig.textContent = `${fmt(total)} pts`;
+
+  if (showExtra) {
+    tvSummary.textContent = `${fmt(darts)} darts • ${pct.toFixed(1)}% of ${fmt(goal)}`;
+  } else {
+    tvSummary.textContent = `${pct.toFixed(1)}% of ${fmt(goal)}`;
+  }
+}
+
+function renderPlayers(){
+  // Clean up any ghost players that are not in throwOrder
+  cleanupOrphanPlayers();
+
+  const arr = Object.entries(players).map(([id,p])=>({
+      id,
+      ...p,
+      score:       p.score       || 0,
+      darts:       p.darts       || 0,
+      tonPlus:     p.tonPlus     || 0,
+      oneEighties: p.oneEighties || 0
+    }))
+    .sort((a,b)=> (b.score!==a.score) ? (b.score-a.score) : a.name.localeCompare(b.name));
+
+  // Clear inline leaderboard body
+  ptable.innerHTML = '';
+
+  arr.forEach((p, idx)=>{
+    const tr  = document.createElement('tr');
+    const avg = threeDA(p);
+
+    const avatar = p.photo
+      ? `<span class="avatar" style="background-image:url(${p.photo})" data-photo="${p.id}"></span>`
+      : `<span class="avatar" data-photo="${p.id}">${(p.name||'?')[0].toUpperCase()}</span>`;
+
+    tr.innerHTML = `
+      <td class="rank">${idx+1}</td>
+      <td>${avatar}${p.name}</td>
+      <td class="num mono">${fmt(p.score)}</td>
+      <td class="num mono">${fmt(p.darts)}</td>
+      <td class="num mono">${fmt(p.tonPlus)}</td>
+      <td class="num mono">${fmt(p.oneEighties)}</td>
+      <td class="num mono">${avg.toFixed(1)}</td>
+      <td><input class="add-inp" type="number" min="0" placeholder="e.g. 60" /></td>
+      <td></td>
+    `;
+
+    const inp     = tr.querySelector('input');
+    const actions = tr.lastElementChild;
+
+    // --- Add to total button (atomic increment in cloud) ---
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.textContent = 'Add';
+    addBtn.className = 'secondary';
+
+    addBtn.onclick = () => openPasswordModal(() => {
+      const raw = inp.value;
+      const v = parseInt(raw, 10);
+      if (isNaN(v) || v <= 0) {
+        inp.value = '';
+        inp.focus();
+        return;
+      }
+      if (!confirm(`Add +${v} points to ${p.name}?`)) return;
+
+      const current   = players[p.id]?.score || 0;
+      const newTotal  = current + v;
+      const skipCloud = true;
+
+      // 1) Local only - do NOT send full doc
+      setPlayerScore(p.id, newTotal, skipCloud);
+      inp.value = '';
+
+      // 2) Cloud - atomic increment so it’s safe with other boards
+            {
+        const inc = firebase.firestore.FieldValue.increment;
+        const updates = {};
+        updates[`players.${p.id}.score`] = inc(v);
+        pushAtomic(updates);
+      }
+
+
+    });
+
+    // --- Correct total button (set score via diff) ---
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.textContent = 'Set total';
+    editBtn.className = 'secondary';
+
+    editBtn.onclick = () => openPasswordModal(() => {
+      const current = players[p.id]?.score || 0;
+      const v = prompt(`Set a new total score for ${p.name}. Current: ${current}`);
+      if (v == null) return;
+
+      const newTotal = parseInt(v, 10);
+      if (isNaN(newTotal) || newTotal < 0) {
+        nudge('Enter a valid non-negative number');
+        return;
+      }
+      if (!confirm(`Confirm set ${p.name} to ${newTotal} points?`)) return;
+
+      const diff      = newTotal - current;
+      const skipCloud = true;
+
+      // 1) Local only - clamp to the new total in the UI
+      setPlayerScore(p.id, newTotal, skipCloud);
+
+      // 2) Cloud - adjust by the difference, not overwrite the whole thing
+           if (diff !== 0) {
+        const inc = firebase.firestore.FieldValue.increment;
+        const updates = {};
+        updates[`players.${p.id}.score`] = inc(diff);
+        pushAtomic(updates);
+      }
+
+
+    });
+
+    actions.append(addBtn, editBtn);
+
+    // Inline leaderboard is view-only for photos – no click handler here
+    ptable.appendChild(tr);
+  });
+
+  // Keep everything else in sync with the same `players` map
+  refreshThrowerSelect();
+  renderTV(arr);
+  renderOrderList();
+  renderBoardCount();
+}
+
+
+function refreshThrowerSelect(){
+  const pool = rosterIds();
+  const prev = currentThrowerId;
+  scorePlayerSel.innerHTML='<option value="">Select player…</option>';
+  pool.forEach(id=>{
+    const opt=document.createElement('option');
+    opt.value=id;
+    opt.textContent=players[id].name;
+    scorePlayerSel.appendChild(opt);
+  });
+  if(prev && pool.includes(prev)){
+    scorePlayerSel.value = prev;
+  }else{
+    currentThrowerId = pool[0] || null;
+    if(currentThrowerId) scorePlayerSel.value = currentThrowerId;
+  }
+}
+
+function buildTVHeader(){
+  const base = [
+    { text:'#',     cls:'tv-rank' },
+    { text:'Player', cls:'tv-player-head' },
+    { text:'Score',  cls:'tv-num' }
+  ];
+  const extra = [
+    { text:'Darts', cls:'tv-num' },
+    { text:'100+',  cls:'tv-num' },
+    { text:'180',   cls:'tv-num' },
+    { text:'Avg',   cls:'tv-num' }
+  ];
+  $('#tvHeadRow').innerHTML = '';
+  (showExtra ? base.concat(extra) : base).forEach(c => {
+    const th = document.createElement('th');
+    th.className = c.cls;
+    th.textContent = c.text;
+    $('#tvHeadRow').appendChild(th);
+  });
+}
+
+function renderTV(sortedArr){
+  buildTVHeader();
+  const arr=sortedArr||Object.entries(players).map(([id,p])=>({
+      id,...p,
+      score:p.score||0,
+      darts:p.darts||0,
+      tonPlus:p.tonPlus||0,
+      oneEighties:p.oneEighties||0
+    }))
+    .sort((a,b)=> (b.score!==a.score) ? (b.score-a.score) : a.name.localeCompare(b.name));
+  tvBody.innerHTML='';
+  arr.forEach((p,idx)=>{
+    const tr=document.createElement('tr');
+    const av=p.photo
+      ? `<span class="tv-avatar" style="background-image:url(${p.photo})"></span>`
+      : `<span class="tv-avatar">${(p.name||'?')[0].toUpperCase()}</span>`;
+    let html = `<td class="tv-rank">${idx+1}</td><td class="tv-name">${av}${p.name}</td><td class="tv-num">${fmt(p.score)}</td>`;
+    if(showExtra){
+      html+=`<td class="tv-num">${fmt(p.darts)}</td><td class="tv-num">${fmt(p.tonPlus)}</td><td class="tv-num">${fmt(p.oneEighties)}</td><td class="tv-num">${(p.darts?((p.score/p.darts)*3).toFixed(1):'0.0')}</td>`;
+    }
+    tr.innerHTML=html; tvBody.appendChild(tr);
+  });
+}
+
+function deletePlayerFromCloud(id){
+  if (!eventRef || !firebase || !firebase.firestore) return;
+  try{
+    const del = firebase.firestore.FieldValue.delete();
+    const updates = {};
+    updates[`players.${id}`] = del;
+    eventRef.set(updates, { merge:true });
+  }catch(e){
+    console.warn('Cloud player delete failed', e);
+  }
+}
+
+function cleanupOrphanPlayers(){
+  // Any player not in throwOrder is an orphan (ghost)
+  const valid = new Set(throwOrder);
+  const orphans = Object.keys(players).filter(id => !valid.has(id));
+
+  if (!orphans.length) return;
+
+  orphans.forEach(id => {
+    // Remove locally
+    delete players[id];
+    // Remove from cloud doc so they can’t respawn
+    deletePlayerFromCloud(id);
+  });
+
+  // Persist the cleaned state locally (no extra cloud write)
+  saveLocalOnly();
+}
+
+
+
+/* Order list (setup) with name edit and delete */
+function renderOrderList(){
+  orderList.innerHTML='';
+  throwOrder.forEach((id,idx)=>{
+    if(!players[id]) return;
+    const li=document.createElement('li'); li.className='order-item';
+    const av=players[id].photo
+      ? `<span class="avatar" style="background-image:url(${players[id].photo})" data-edit-photo="${id}"></span>`
+      : `<span class="avatar" data-edit-photo="${id}">${(players[id].name||'?')[0].toUpperCase()}</span>`;
+    li.innerHTML = `${av}<div class="name"><span id="nm-${id}">${players[id].name}</span><button class="secondary" type="button" data-edit-name="${id}" title="Edit name">✏️</button><button class="warn" type="button" data-delete-player="${id}" title="Delete player">🗑️</button></div><div class="btns"></div>`;
+    const btns=li.querySelector('.btns');
+
+    const up=document.createElement('button'); up.textContent='↑'; up.className='secondary'; up.type='button';
+    const down=document.createElement('button'); down.textContent='↓'; down.className='secondary'; down.type='button';
+    up.onclick=()=>{ if(idx===0) return; [throwOrder[idx-1],throwOrder[idx]]=[throwOrder[idx],throwOrder[idx-1]]; persistOrder(); renderPlayers(); };
+    down.onclick=()=>{ if(idx===throwOrder.length-1) return; [throwOrder[idx+1],throwOrder[idx]]=[throwOrder[idx],throwOrder[idx+1]]; persistOrder(); renderPlayers(); };
+
+    const photoBtn=document.createElement('button');
+    photoBtn.textContent='Photo';
+    photoBtn.className='secondary player-photo-btn';
+    photoBtn.type='button';
+    photoBtn.onclick=()=> pickPhotoFor(id);
+    li.querySelector('[data-edit-photo]').onclick=()=> pickPhotoFor(id);
+
+    const rem=document.createElement('button');
+    rem.textContent='Delete Photo';
+    rem.className='warn player-photo-delete-btn';
+    rem.type='button';
+    rem.onclick=()=> removePlayerPhoto(id);
+
+  /* name edit */
+li.querySelector('[data-edit-name]').onclick=()=>{
+  const current = players[id].name || '';
+  const next = prompt('Edit player name:', current);
+  if(next==null) return;
+  const clean = (next+'').trim();
+  if(!clean) return;
+  players[id].name = clean;
+  touchPlayer(id);
+  saveLocal();
+  renderPlayers();
+};
+
+
+    /* delete player */
+const delBtn = li.querySelector('[data-delete-player]');
+delBtn.onclick = () => {
+  const p = players[id];
+  if (!p) return;
+
+  if (!confirm(`Delete player "${p.name}" and all their scores?`)) return;
+
+  // 1) Local delete
+  delete players[id];
+  throwOrder = throwOrder.filter(pid => pid !== id);
+  boardPlayers = (boardPlayers || []).filter(pid => pid !== id);
+  saveBoard();
+
+  if (currentThrowerId === id) {
+    const pool = rosterIds();
+    setThrower(pool[0] || null);
+  }
+
+  // 2) Save locally only (no full cloud write)
+  saveLocal(true);
+
+  // 3) Explicitly delete from Firestore so it can't be resurrected
+  deletePlayerFromCloud(id);
+
+  // 4) Re-render UI
+  renderPlayers();
+  renderOrderList();
+  updateBars();
+};
+
+
+    btns.append(up,down,photoBtn,rem);
+    orderList.appendChild(li);
+  });
+}
+
+/* Data ops */
+function addPlayer(name, photo){
+  const id = uid();
+  players[id] = {
+    name,
+    score: 0,
+    darts: 0,
+    tonPlus: 0,
+    oneEighties: 0,
+    photo: photo || null,
+    lastUpdated: nowTs()
+  };
+
+  throwOrder.push(id);
+  touchPlayer(id);
+  saveLocal();
+  renderPlayers();
+  updateBars();
+}
+
+function setGoal(v){
+  goal = v;
+  updateBars();
+  saveLocal();
+}
+
+function setPlayerScore(id, score, skipCloud){
+  if(!players[id]) return;
+  score = Math.max(0, score);
+  players[id].score = score;
+  touchPlayer(id);
+  saveLocal(skipCloud);
+  renderPlayers();
+  updateBars();
+}
+
+function setPlayerDarts(id, darts, skipCloud){
+  if(!players[id]) return;
+  darts = Math.max(0, darts|0);
+  players[id].darts = darts;
+  touchPlayer(id);
+  saveLocal(skipCloud);
+  renderPlayers();
+  updateBars();
+}
+
+function setPlayerTonPlus(id, val, skipCloud){
+  if(!players[id]) return;
+  val = Math.max(0, val|0);
+  players[id].tonPlus = val;
+  touchPlayer(id);
+  saveLocal(skipCloud);
+  renderPlayers();
+}
+
+function setPlayerOneEighties(id, val, skipCloud){
+  if(!players[id]) return;
+  val = Math.max(0, val|0);
+  players[id].oneEighties = val;
+  touchPlayer(id);
+  saveLocal(skipCloud);
+  renderPlayers();
+}
+
+
+
+function setPlayerPhoto(id, dataUrl){
+  if(!players[id]) return;
+  players[id].photo = dataUrl || null;
+  touchPlayer(id);
+  saveLocal();
+  renderPlayers();
+}
+
+function persistOrder(){ saveLocal(); }
+
+function pickPhotoFor(id){
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*';
+  inp.onchange=async ()=>{
+    const f=inp.files&&inp.files[0]; if(!f) return;
+    try{
+      const data=await fileToCompressedDataURL(f,256);
+      setPlayerPhoto(id,data);
+    }catch(_){
+      nudge('Could not read that image');
+    }
+  };
+  inp.click();
+}
+
+/* Rotation + scoring (board aware) */
+function poolAfter(id){
+  const pool = rosterIds();
+  if(pool.length===0) return {pool, next:null};
+  const idx = Math.max(0, pool.indexOf(id));
+  const next = pool[(idx+1) % pool.length];
+  return {pool, next};
+}
+function setThrower(id){
+  currentThrowerId = id || null;
+  if (currentThrowerId) {
+    scorePlayerSel.value = currentThrowerId;
+  }
+  // per-device only
+  saveLocalOnly();
+}
+
+function advanceToNextThrower(fromId){
+  const {pool, next} = poolAfter(fromId || currentThrowerId || rosterIds()[0]);
+  if(!pool.length){ nudge('Select board players'); return; }
+  setThrower(next);
+  setMult(1); visit=[]; renderVisit(); nudge('');
+}
+
+let mult=1, visit=[];
+function setMult(m){
+  mult=m;
+  [tS,tD,tT].forEach(b=>b.classList.remove('active'));
+  ({1:tS,2:tD,3:tT})[m].classList.add('active');
+}
+function dartNotation(d){
+  if(d==null) return '-';
+  if(d.isBull){ return String(d.base); }
+  if(d.base===0) return 'MISS';
+  if(d.mult===1) return String(d.base);
+  if(d.mult===2) return 'D'+d.base;
+  if(d.mult===3) return 'T'+d.base;
+  return String(d.base);
+}
+function renderVisit(){
+  dEls.forEach((el,i)=> el.textContent = dartNotation(visit[i]));
+  vsum.textContent = 'Total: ' + visit.reduce((s,d)=>s+(d?.score||0),0);
+}
+function addDart(base, isBull=false){
+  if(visit.length>=3) return;
+  let score=0, usedMult=mult;
+  if(isBull){
+    score=base; usedMult=(base===50?2:1);
+  } else {
+    score=base*usedMult;
+  }
+  visit.push({base, mult:usedMult, isBull, score}); renderVisit();
+}
+function buildSegGrids(){
+  for(let n=20;n>=1;n--){
+    const b=document.createElement('button');
+    b.className='seg'; b.type='button'; b.textContent=String(n);
+    b.onclick=()=>{ playTap(); addDart(n,false); };
+    segGrid.appendChild(b);
+  }
+  const miss=document.createElement('button'); miss.className='seg danger'; miss.type='button'; miss.textContent='MISS'; miss.onclick=()=>{ playTap(); addDart(0,false); }; bullRow.appendChild(miss);
+  const b25=document.createElement('button'); b25.className='seg'; b25.type='button'; b25.textContent='25'; b25.onclick=()=>{ playTap(); addDart(25,true); }; bullRow.appendChild(b25);
+  const b50=document.createElement('button'); b50.className='seg'; b50.type='button'; b50.textContent='50'; b50.onclick=()=>{ playTap(); addDart(50,true); }; bullRow.appendChild(b50);
+}
+
+/* Events */
+goalEl.oninput=()=>{
+  const v=parseInt(goalEl.value,10);
+  if(isNaN(v)||v<=0) return;
+  setGoal(v);
+};
+addPlayerBtn.onclick=async ()=>{
+  const name=(pname.value||'').trim();
+  if(!name){
+    pname.focus();
+    nudge('Enter a player name');
+    return;
+  }
+  const f=pphoto.files[0];
+  let data=null;
+  if(f){
+    data=await fileToCompressedDataURL(f,256).catch(()=>null);
+  }
+  addPlayer(name, data);
+  pname.value=''; pphoto.value='';
+};
+resetAllBtn.onclick=()=>{
+  openPasswordModal(()=>{ 
+    if(!confirm('Zero all player scores, darts, and 100+/180s?')) return; 
+    Object.keys(players).forEach(id=>{
+      setPlayerScore(id,0);
+      setPlayerDarts(id,0);
+      setPlayerTonPlus(id,0);
+      setPlayerOneEighties(id,0);
+    });
+    actionStack=[]; 
+    saveLocal(); 
+  });
+};
+
+tS.onclick=()=>{ playTap(); setMult(1); };
+tD.onclick=()=>{ playTap(); setMult(2); };
+tT.onclick=()=>{ playTap(); setMult(3); };
+
+skipBtn.onclick=()=>{
+  if(!currentThrowerId){
+    const first = rosterIds()[0];
+    if(!first){
+      nudge('Add/select board players');
+      return;
+    }
+    setThrower(first);
+  }
+  advanceToNextThrower(currentThrowerId);
+};
+
+scorePlayerSel.onchange = () => {
+  const pid = scorePlayerSel.value;
+  currentThrowerId = pid || null;
+  // per-device only
+  saveLocalOnly();
+};
+
+
+undoVisitBtn.onclick = () => {
+  // If user is just removing one of the three darts before submit
+  if (visit.length > 0) {
+    playTap();
+    visit.pop();
+    renderVisit();
+    nudge('');
+    return;
+  }
+
+  // Proper undo of the last SUBMITTED visit on this device
+  const last = actionStack.pop();
+  if (!last) {
+    nudge('Nothing to undo');
+    return;
+  }
+
+  playTap();
+
+  const p = players[last.playerId];
+  if (!p) {
+    nudge('Player no longer exists');
+    return;
+  }
+
+  const skipCloud = true;
+
+  // 1) Local UI update - do NOT push full document to cloud
+  setPlayerScore(last.playerId, (p.score || 0) - last.total, skipCloud);
+  setPlayerDarts(last.playerId, (p.darts || 0) - last.dartsUsed, skipCloud);
+
+  if (last.plus100) {
+    setPlayerTonPlus(last.playerId, (p.tonPlus || 0) - 1, skipCloud);
+  }
+  if (last.max180) {
+    setPlayerOneEighties(last.playerId, (p.oneEighties || 0) - 1, skipCloud);
+  }
+
+  {
+    const inc = firebase.firestore.FieldValue.increment;
+    const updates = {};
+    updates[`players.${last.playerId}.score`]      = inc(-last.total);
+    updates[`players.${last.playerId}.darts`]      = inc(-last.dartsUsed);
+    if (last.plus100) updates[`players.${last.playerId}.tonPlus`]     = inc(-1);
+    if (last.max180)  updates[`players.${last.playerId}.oneEighties`] = inc(-1);
+    pushAtomic(updates);
+  }
+
+
+
+  // 3) Re-open that visit visually and persist locally only
+  setThrower(last.playerId);
+  setMult(1);
+  visit = last.darts.slice();
+  renderVisit();
+  saveLocalOnly();    // update localStorage + stack, no extra cloud write
+  nudge('Reopened previous visit');
+};
+
+
+submitBtn.onclick = () => {
+  const pool = rosterIds();
+  const pid = currentThrowerId || pool[0];
+
+  if (!pid) {
+    nudge('Pick a player');
+    return;
+  }
+
+  // Force exactly 3 darts, including MISS
+  if (visit.length < 3) {
+    nudge('Enter all 3 darts (including MISS)', 'error'); 
+    return;
+  }
+
+  const add = visit.reduce((s, d) => s + (d.score || 0), 0);
+  const dartsUsed = visit.length; // will always be 3 now
+  const plus100 = add >= 100;
+  const max180 =
+    add === 180 &&
+    visit.length === 3 &&
+    visit.every(d => !d.isBull && d.base === 20 && d.mult === 3);
+
+  // 1) Local UI update - but do NOT push full document to cloud
+  const skipCloud = true;
+  setPlayerScore(pid, (players[pid]?.score || 0) + add, skipCloud);
+  setPlayerDarts(pid, (players[pid]?.darts || 0) + dartsUsed, skipCloud);
+
+  if (plus100) {
+    setPlayerTonPlus(pid, (players[pid]?.tonPlus || 0) + 1, skipCloud);
+  }
+
+  if (max180) {
+    setPlayerOneEighties(pid, (players[pid]?.oneEighties || 0) + 1, skipCloud);
+  }
+
+  // 2) Push JUST this visit to Firestore using atomic increments
+  const inc = firebase.firestore.FieldValue.increment;
+  const updates = {};
+  updates[`players.${pid}.score`]      = inc(add);
+  updates[`players.${pid}.darts`]      = inc(dartsUsed);
+  if (plus100) {
+    updates[`players.${pid}.tonPlus`]     = inc(1);
+  }
+  if (max180) {
+    updates[`players.${pid}.oneEighties`] = inc(1);
+  }
+  pushAtomic(updates);  // <--- instead of eventRef.set(...)
+
+  // 3) Local undo stack + local persistence (no extra cloud write)
+  actionStack.push({
+    playerId: pid,
+    darts: visit.slice(),
+    total: add,
+    dartsUsed,
+    plus100,
+    max180
+  });
+  saveLocalOnly();
+
+  // Voice callout + 180 overlay
+  if (max180) {
+    playScoreCall(180);
+    showBig180();
+  } else {
+    speakTotal(add);
+  }
+
+  advanceToNextThrower(pid);
+};
+
+
+/* TV toggle */
+toggleExtra.onchange = () => {
+  showExtra = toggleExtra.checked;
+  saveLocal();
+  renderTV();
+  updateBars(); // refresh summary so darts only shows when extra stats are on
+};
+
+function syncToggle(){ toggleExtra.checked = !!showExtra; }
+
+/* Init */
+function init(){
+  preloadSounds(); // <-- preload sounds instantly
+  switchTab('scoring');
+  loadBoardLocal();           // only per-device board selection
+  buildSegGrids();
+  setMult(1);
+  renderVisit();
+  renderPlayers();            // players is empty until an event is joined
+  updateBars();
+  if(!currentThrowerId){
+    const first = rosterIds()[0];
+    if(first) setThrower(first);
+  }
+  syncToggle();
+  renderBoardCount();
+  updateModeBadge();          // start in "not connected" until they join an event
+}
+
+init();
+</script>
+<div id="big180mask"></div>
+<div id="big180">180</div>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => {
+      console.warn('SW registration failed', err);
+    });
+  });
+}
+</script>
+</body>
+</html>
+<!-- Copyright © [17/11/2025]. [Sam Harper]. All rights reserved. -->
