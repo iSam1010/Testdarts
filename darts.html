@@ -29,13 +29,20 @@
   }
   *{box-sizing:border-box}
   html,body{
-    background:var(--bg);
-    color:var(--text);
-    margin:0;
-    width:100%;
-    -webkit-text-size-adjust:100%;
-    transition:background .2s,color .2s;
-  }
+  background:var(--bg);
+  color:var(--text);
+  margin:0;
+  width:100%;
+  -webkit-text-size-adjust:100%;
+  transition:background .2s,color .2s;
+  /* Stop iOS using tap to zoom, but still allow pinch */
+  touch-action:manipulation;
+}
+
+/* Ensure iOS never auto-zooms small text */
+body {
+  font-size: 16px; /* Safe minimum for iOS */
+}
 
   /* Fix zoom-out while keeping full-width header */
   html {
@@ -519,25 +526,103 @@
     font-size:.85rem;
   }
 
-  .tv-wrap{padding:8px;}
-  .tv-title{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .tv-wrap{
+    padding:8px 0 16px;
+  }
+  .tv-grid-wrap{
+    width:100%;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  .tv-grid{
+    width:100%;
+    min-width:600px; /* gives the table room; smaller screens will scroll horizontally */
+  }
+
+  /* Let TV view use the full screen width on phones */
+  @media (max-width: 720px){
+    .tv-wrap{
+      margin:0 -16px;          /* cancel container padding */
+      padding:8px 16px 16px;   /* add it back inside */
+    }
+  }
+
+  .tv-title{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
   .tv-title h2{margin:0;}
-  .tv-score-big{margin-top:8px; font-size:1.6rem; font-weight:800; text-align:right;}
-  .tv-progress{height:20px; border-radius:999px; background:var(--chip); border:1px solid var(--border); overflow:hidden; margin-top:8px;}
+
+  .tv-score-big{
+    margin-top:8px;
+    font-size:1.6rem;
+    font-weight:800;
+    text-align:right;
+  }
+
+  .tv-progress{
+    width:100%;
+    height:20px;
+    border-radius:999px;
+    background:var(--chip);
+    border:1px solid var(--border);
+    overflow:hidden;
+    margin-top:8px;
+  }
   .tv-progress .bar{height:100%;}
-  .tv-grid{width:100%; border-collapse:separate; border-spacing:0 6px; margin-top:10px;}
+
+
+.tv-wrap{
+    width:100%;
+    max-width:100%;
+  }
+
+  .tv-grid-wrap{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;        /* table can’t make page wider than screen */
+  }
+
+  .tv-grid{
+    width:100%;
+    max-width:100%;
+    border-collapse:separate;
+    border-spacing:0 6px;
+    margin-top:10px;
+    table-layout:auto;        /* let browser squeeze columns instead of expanding */
+  }
+
   .tv-grid thead th{
-    padding:6px 8px;
+    padding:6px 6px;
     color:var(--muted);
     text-transform:uppercase;
     letter-spacing:.05em;
+    font-size:.8rem;
   }
+
   .tv-grid thead th.tv-player-head{
     text-align:left;
-    padding-left:54px;
+    padding-left:40px;
   }
-  .tv-grid tbody tr{background:linear-gradient(180deg, var(--row), var(--row2)); border:1px solid var(--border);}
-  .tv-grid td{padding:10px 8px;}
+
+  .tv-grid tbody tr{
+    background:linear-gradient(180deg, var(--row), var(--row2));
+    border:1px solid var(--border);
+  }
+
+  .tv-grid td{
+    padding:8px 6px;
+  }
+  /* stop any cell blowing the width out */
+  .tv-grid th,
+  .tv-grid td{
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
   .tv-rank{width:50px; text-align:center; font-weight:800; font-size:1.1rem;}
   .tv-name{font-size:1.1rem; display:flex; align-items:center; gap:10px;}
   .tv-avatar{width:36px; height:36px; border-radius:999px; background:rgba(127,127,127,.18); background-size:cover; background-position:center;
@@ -625,12 +710,14 @@
     right:10px;
     top:10px;
   }
-  .inline-leaderboard-scroll{
+ .inline-leaderboard-scroll{
     overflow-x:auto;
     -webkit-overflow-scrolling:touch;
   }
   .inline-leaderboard-scroll table{
-    min-width:600px;
+    width:100%;
+    max-width:100%;
+    table-layout:auto;
   }
 
   /* Hide last two columns (ADD + ACTIONS) by default on inline leaderboard */
@@ -1023,10 +1110,12 @@
       <div class="tv-progress"><div class="bar" id="tvBar"></div></div>
       <div class="small" id="tvSummary" style="text-align:right; margin-top:6px;"></div>
 
-      <table class="tv-grid">
-        <thead><tr id="tvHeadRow"></tr></thead>
-        <tbody id="tvBody"></tbody>
-      </table>
+      <div class="tv-grid-wrap">
+        <table class="tv-grid">
+          <thead><tr id="tvHeadRow"></tr></thead>
+          <tbody id="tvBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
@@ -1048,7 +1137,7 @@
 <!-- Password modal -->
 <div id="pwMask" class="mask" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pwTitle">
-    <h3 id="pwTitle">Enter settings password</h3>
+    <h3 id="pwTitle">Enter setup password</h3>
     <div class="modal-row">
       <input id="pwInput" type="password" autocomplete="current-password" placeholder="Password"
              style="flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:var(--chip); color:var(--text);">
@@ -1439,19 +1528,22 @@ function loadLocalForCurrentEvent(){
   if (!currentEventId) return;
   try{
     const d = JSON.parse(localStorage.getItem(lsKeyForCurrent()) || '{}');
-    goal             = d.goal || 100000;
-    players          = d.players || {};
+    goal        = d.goal || 100000;
+    players     = d.players || {};
     Object.values(players).forEach(p=>{
       p.darts       = p.darts       || 0;
       p.tonPlus     = p.tonPlus     || 0;
       p.oneEighties = p.oneEighties || 0;
       ensurePlayerStamp(p);
     });
-    throwOrder       = d.throwOrder || Object.keys(players);
-    currentIndex     = d.currentIndex || 0;
-    showExtra        = !!d.showExtra;
-    actionStack      = d.actionStack || [];
-    currentThrowerId = d.currentThrowerId || null;
+    throwOrder   = d.throwOrder || Object.keys(players);
+    currentIndex = d.currentIndex || 0;
+    showExtra    = !!d.showExtra;
+    actionStack  = d.actionStack || [];
+
+    // IMPORTANT: do NOT restore the last thrower from local storage.
+    // We always want the dropdown to start on "Select player…" on page load/join.
+    currentThrowerId = null;
   }catch(_){}
 }
 
@@ -1861,12 +1953,22 @@ boardClear.onclick=()=>{
   buildBoardList();
   refreshThrowerSelect();
 };
-boardSave.onclick=()=>{
-  const checks=[...boardList.querySelectorAll('input[type=checkbox]')];
-  boardPlayers = checks.filter(c=>c.checked).map(c=>c.value);
+
+          boardSave.onclick = () => {
+  const checks = [...boardList.querySelectorAll('input[type=checkbox]')];
+  boardPlayers = checks.filter(c => c.checked).map(c => c.value);
   saveBoard();
-  closeBoardModal();
   refreshThrowerSelect();
+
+  // If no thrower is selected yet, auto-pick the first valid board player
+  if (!currentThrowerId && boardPlayers && boardPlayers.length) {
+    const pool = rosterIds(); // uses boardPlayers + throwOrder
+    if (pool.length) {
+      setThrower(pool[0]); // sets dropdown + saves per-device
+    }
+  }
+
+  closeBoardModal();
 
   if (boardPlayers.length > 0){
     playScoreCall('gameon');
@@ -2085,24 +2187,32 @@ function renderPlayers(){
   renderBoardCount();
 }
 
-
 function refreshThrowerSelect(){
   const pool = rosterIds();
-  const prev = currentThrowerId;
-  scorePlayerSel.innerHTML='<option value="">Select player…</option>';
+  // Only keep the previous thrower if they are still valid
+  const prev = (currentThrowerId && pool.includes(currentThrowerId))
+    ? currentThrowerId
+    : null;
+
+  scorePlayerSel.innerHTML = '<option value="">Select player…</option>';
   pool.forEach(id=>{
-    const opt=document.createElement('option');
-    opt.value=id;
-    opt.textContent=players[id].name;
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = players[id].name;
     scorePlayerSel.appendChild(opt);
   });
-  if(prev && pool.includes(prev)){
+
+  if (prev){
+    // Restore the same thrower if still valid
     scorePlayerSel.value = prev;
-  }else{
-    currentThrowerId = pool[0] || null;
-    if(currentThrowerId) scorePlayerSel.value = currentThrowerId;
+    currentThrowerId = prev;
+  } else {
+    // Force the placeholder and clear thrower
+    scorePlayerSel.value = '';
+    currentThrowerId = null;
   }
 }
+
 
 function buildTVHeader(){
   const base = [
@@ -2537,11 +2647,10 @@ undoVisitBtn.onclick = () => {
 
 
 submitBtn.onclick = () => {
-  const pool = rosterIds();
-  const pid = currentThrowerId || pool[0];
+  const pid = currentThrowerId;
 
   if (!pid) {
-    nudge('Pick a player');
+    nudge('Select a player first', 'error');
     return;
   }
 
@@ -2628,15 +2737,15 @@ function init(){
   renderVisit();
   renderPlayers();            // players is empty until an event is joined
   updateBars();
-  if(!currentThrowerId){
-    const first = rosterIds()[0];
-    if(first) setThrower(first);
-  }
+
+  // Always start with "Select player…" until the user chooses one
+  currentThrowerId = null;
+  refreshThrowerSelect();
+
   syncToggle();
   renderBoardCount();
   updateModeBadge();          // start in "not connected" until they join an event
 }
-
 init();
 </script>
 <div id="big180mask"></div>
@@ -2653,4 +2762,3 @@ if ('serviceWorker' in navigator) {
 </body>
 </html>
 <!-- Copyright © [17/11/2025]. [Sam Harper]. All rights reserved. -->
-
