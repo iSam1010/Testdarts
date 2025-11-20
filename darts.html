@@ -43,11 +43,11 @@
   }
   body {
     overflow-x:hidden;
-    padding-top:70px; /* tighter gap under fixed header */
+    padding-top:42px; /* was 96px - pulls content slightly closer to top bar */
   }
   @supports(padding: max(0px)) {
     body{
-      padding-top:calc(80px + env(safe-area-inset-top));
+      padding-top:calc(42px + env(safe-area-inset-top));
     }
   }
 
@@ -302,7 +302,7 @@
     margin-left:6px;
   }
 
-  /* Voice button text using pseudo-element */
+  /* Voice button text using pseudo-element, so other JS that edits innerHTML will not break it */
   #voiceBtn::before{
     content:"Mute";
     margin-right:6px;
@@ -675,18 +675,18 @@
         <button id="menuLeaderboard" class="menu-tab" type="button">Leaderboard</button>
       </div>
 
-      <!-- Quick actions, one per line: Mute, Refresh, Setup -->
+      <!-- Quick actions, one per line -->
       <div class="menu-row menu-row-actions">
-        <button id="voiceBtn" class="menu-chip" type="button">
-          <span class="icon">🔊</span>
+        <button id="settingsBtn" class="menu-chip" type="button">
+          <span class="label">Setup</span>
+          <span class="icon">⚙️</span>
         </button>
         <button id="refreshBtn" class="menu-chip" type="button">
           <span class="label">Refresh</span>
           <span class="icon">🔄</span>
         </button>
-        <button id="settingsBtn" class="menu-chip" type="button">
-          <span class="label">Setup</span>
-          <span class="icon">⚙️</span>
+        <button id="voiceBtn" class="menu-chip" type="button">
+          <span class="icon">🔊</span>
         </button>
       </div>
 
