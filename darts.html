@@ -43,15 +43,21 @@
   }
   body {
     overflow-x:hidden;
-    padding-top:96px; /* content clears fixed header */
+    padding-top:80px; /* tighter gap under fixed header */
   }
   @supports(padding: max(0px)) {
     body{
-      padding-top:calc(96px + env(safe-area-inset-top));
+      padding-top:calc(80px + env(safe-area-inset-top));
     }
   }
 
-  .container{max-width:1280px; width:100%; margin:0 auto; padding:16px;}
+  /* Slightly reduced top padding so content sits closer under header */
+  .container{
+    max-width:1280px;
+    width:100%;
+    margin:0 auto;
+    padding:8px 16px 16px;
+  }
   h1{margin:0; font-weight:800; font-size:1.5rem;}
 
   /* ========================= */
@@ -264,8 +270,8 @@
     align-items:stretch;
     justify-content:flex-start;
     gap:6px;
-    margin-top:14px;          /* increased gap */
-    padding-top:10px;         /* a bit more breathing room */
+    margin-top:14px;
+    padding-top:10px;
     border-top:1px solid rgba(148,163,184,.35);
   }
 
@@ -294,6 +300,15 @@
   }
   .menu-chip span.icon{
     margin-left:6px;
+  }
+
+  /* Voice button text using pseudo-element */
+  #voiceBtn::before{
+    content:"Mute";
+    margin-right:6px;
+  }
+  #voiceBtn.is-muted::before{
+    content:"Unmute";
   }
 
   /* Theme row */
@@ -409,7 +424,7 @@
     border:1px solid var(--border);
     background:var(--chip);
     color:var(--text);
-    font-size:1rem; /* >=16px to avoid iOS auto-zoom */
+    font-size:1rem;
   }
   button{
     border:none; border-radius:999px; padding:10px 16px; font-weight:700; cursor:pointer; color:#fff;
@@ -542,7 +557,7 @@
 
   @media (max-width:1100px){ .grid{grid-template-columns:1fr;} }
   @media (max-width:600px){
-    .container{padding:12px;}
+    .container{padding:8px 12px 12px;}
     .seg{padding:12px 8px; font-size:1rem;}
     .seg-grid{gap:6px}
     .bulls-row{gap:6px}
@@ -660,19 +675,18 @@
         <button id="menuLeaderboard" class="menu-tab" type="button">Leaderboard</button>
       </div>
 
-      <!-- Quick actions, one per line -->
+      <!-- Quick actions, one per line: Mute, Refresh, Setup -->
       <div class="menu-row menu-row-actions">
-        <button id="settingsBtn" class="menu-chip" type="button">
-          <span class="label">Setup</span>
-          <span class="icon">⚙️</span>
+        <button id="voiceBtn" class="menu-chip" type="button">
+          <span class="icon">🔊</span>
         </button>
         <button id="refreshBtn" class="menu-chip" type="button">
           <span class="label">Refresh</span>
           <span class="icon">🔄</span>
         </button>
-        <button id="voiceBtn" class="menu-chip" type="button">
-          <span class="label">Mute</span>
-          <span class="icon">🔊</span>
+        <button id="settingsBtn" class="menu-chip" type="button">
+          <span class="label">Setup</span>
+          <span class="icon">⚙️</span>
         </button>
       </div>
 
@@ -747,6 +761,14 @@
     }
 
     syncMenuTabs(); // initial
+
+    /* Mute / Unmute label toggle using class only */
+    const voiceBtn = document.getElementById('voiceBtn');
+    if (voiceBtn) {
+      voiceBtn.addEventListener('click', function () {
+        voiceBtn.classList.toggle('is-muted');
+      });
+    }
 
     /* Inline leaderboard edit mode:
        - Automatically finds the inline leaderboard card whose header starts with "Leaderboard".
